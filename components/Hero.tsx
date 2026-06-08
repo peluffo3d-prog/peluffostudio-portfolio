@@ -221,7 +221,7 @@ export default function Hero() {
                     className="font-semibold uppercase text-black"
                     style={{ fontSize: "clamp(2rem, 9vw, 9rem)", lineHeight: 0.88, fontWeight: 600 }}
                   >
-                    <ScrambleText text={word} delay={400 + i * 200} duration={2800} />
+                    <ScrambleText text={word} delay={400 + i * 200} duration={2100} />
                   </motion.div>
                 </div>
               ))}
