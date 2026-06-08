@@ -74,10 +74,10 @@ export default function Hero() {
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ fontFamily: "'Inter', sans-serif", background: "#ffffff" }}
     >
-      {/* ── VIDEO BACKGROUND (parallax) ── */}
+      {/* ── VIDEO BACKGROUND (parallax sin zoom) ── */}
       <motion.div
-        className="absolute inset-0 pointer-events-none"
-        style={{ y: videoY, scale: 1.15, zIndex: 0 }}
+        className="absolute pointer-events-none"
+        style={{ y: videoY, top: "-65px", left: 0, right: 0, bottom: "-65px", zIndex: 0 }}
       >
         <video
           autoPlay loop muted playsInline
