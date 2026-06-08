@@ -108,7 +108,7 @@ export default function Hero() {
       <div className="relative flex flex-col" style={{ zIndex: 10, minHeight: "100svh" }}>
 
         {/* ── NAV ── */}
-        <nav className="flex items-center justify-between px-5 sm:px-8 md:px-14 pt-6 md:pt-8">
+        <nav className="flex items-center justify-between px-5 sm:px-8 md:px-14 pt-10 md:pt-16">
           <motion.div
             variants={fadeDown} initial="hidden" animate="visible" custom={0}
             className="flex items-center gap-3"
