@@ -1,9 +1,11 @@
 "use client";
-import { motion, AnimatePresence } from "motion/react";
-import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useScroll } from "motion/react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowUpRight, X } from "lucide-react";
 import { ACCENT, EASE } from "@/lib/constants";
 import StatCounter from "@/components/StatCounter";
+import ScrambleText from "@/components/ScrambleText";
+import ParticleCanvas from "@/components/ParticleCanvas";
 
 const fadeDown = {
   hidden: { opacity: 0, y: -20 },
@@ -30,9 +32,34 @@ const STATS = [
 ];
 
 export default function Hero() {
+  const heroRef = useRef<HTMLDivElement>(null);
   const [menuOpen, setMenuOpen]     = useState(false);
   const [availMonth, setAvailMonth] = useState("");
 
+  // ── Cursor tracking ────────────────────────────────────────────────────────
+  const rawX    = useMotionValue(0.5);
+  const rawY    = useMotionValue(0.5);
+  const springX = useSpring(rawX, { stiffness: 55, damping: 22 });
+  const springY = useSpring(rawY, { stiffness: 55, damping: 22 });
+  const hX      = useTransform(springX, [0, 1], [-22, 22]);
+  const hY      = useTransform(springY, [0, 1], [-10, 10]);
+
+  function onMouseMove(e: React.MouseEvent) {
+    if (!heroRef.current) return;
+    const { left, top, width, height } = heroRef.current.getBoundingClientRect();
+    rawX.set((e.clientX - left) / width);
+    rawY.set((e.clientY - top) / height);
+  }
+  function onMouseLeave() {
+    rawX.set(0.5);
+    rawY.set(0.5);
+  }
+
+  // ── Video parallax ────────────────────────────────────────────────────────
+  const { scrollY } = useScroll();
+  const videoY      = useTransform(scrollY, [0, 800], [0, 55]);
+
+  // ── Available month ────────────────────────────────────────────────────────
   useEffect(() => {
     const d   = new Date();
     const mes = d.toLocaleDateString("es-AR", { month: "long" });
@@ -41,24 +68,33 @@ export default function Hero() {
 
   return (
     <div
+      ref={heroRef}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
       className="relative min-h-screen flex flex-col overflow-hidden"
       style={{ fontFamily: "'Inter', sans-serif", background: "#ffffff" }}
     >
-      {/* ── VIDEO BACKGROUND ── */}
-      <video
-        autoPlay loop muted playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-        style={{ zIndex: 0 }}
+      {/* ── VIDEO BACKGROUND (parallax) ── */}
+      <motion.div
+        className="absolute inset-0 pointer-events-none"
+        style={{ y: videoY, scale: 1.15, zIndex: 0 }}
       >
-        <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260517_222138_3e3205be-3364-417b-a64a-bfe087acbec4.mp4" />
-      </video>
+        <video
+          autoPlay loop muted playsInline
+          className="w-full h-full object-cover"
+        >
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260517_222138_3e3205be-3364-417b-a64a-bfe087acbec4.mp4" />
+        </video>
+      </motion.div>
+
+      {/* ── PARTICLES ── */}
+      <ParticleCanvas />
 
       {/* ── CONTENT ── */}
       <div className="relative z-10 flex flex-col min-h-screen">
 
         {/* ── NAV ── */}
         <nav className="flex items-center justify-between px-5 sm:px-8 md:px-12 pt-5 md:pt-6">
-          {/* Logo */}
           <motion.div
             variants={fadeDown} initial="hidden" animate="visible" custom={0}
             className="flex items-center gap-3"
@@ -74,7 +110,6 @@ export default function Hero() {
             </span>
           </motion.div>
 
-          {/* Center links — desktop only */}
           <div className="hidden md:flex items-center gap-8">
             {NAV_LINKS.map((link, i) => (
               <motion.a
@@ -88,7 +123,6 @@ export default function Hero() {
             ))}
           </div>
 
-          {/* Badge disponibilidad — solo cuando availMonth está listo */}
           {availMonth && (
             <motion.div
               variants={fadeDown} initial="hidden" animate="visible" custom={5}
@@ -102,7 +136,6 @@ export default function Hero() {
             </motion.div>
           )}
 
-          {/* Hamburger */}
           <motion.button
             variants={fadeDown} initial="hidden" animate="visible" custom={6}
             onClick={() => setMenuOpen(true)}
@@ -163,7 +196,7 @@ export default function Hero() {
             </motion.a>
           </div>
 
-          {/* Row B: description + main heading */}
+          {/* Row B: description + heading con cursor tracking */}
           <div className="flex items-end justify-between gap-3 sm:gap-4">
             <motion.div
               variants={fadeUp} initial="hidden" animate="visible" custom={7}
@@ -174,8 +207,11 @@ export default function Hero() {
               </p>
             </motion.div>
 
-            {/* Heading words — clip reveal */}
-            <div className="text-right">
+            {/* Heading — cursor tracking + scramble reveal */}
+            <motion.div
+              className="text-right"
+              style={{ x: hX, y: hY }}
+            >
               {HEADING_WORDS.map((word, i) => (
                 <div key={word} className="overflow-hidden">
                   <motion.div
@@ -185,11 +221,11 @@ export default function Hero() {
                     className="font-semibold uppercase text-black"
                     style={{ fontSize: "clamp(2rem, 9vw, 9rem)", lineHeight: 0.88, fontWeight: 600 }}
                   >
-                    {word}
+                    <ScrambleText text={word} delay={400 + i * 140} duration={900} />
                   </motion.div>
                 </div>
               ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
@@ -204,7 +240,6 @@ export default function Hero() {
             transition={{ duration: 0.22 }}
             className="fixed inset-0 z-50 bg-white flex flex-col px-5 sm:px-8 pt-5 pb-10"
           >
-            {/* Top */}
             <div className="flex items-center justify-between">
               <div
                 className="w-8 h-8 rounded-full border-2 flex items-center justify-center"
@@ -221,7 +256,6 @@ export default function Hero() {
               </button>
             </div>
 
-            {/* Links */}
             <div className="flex flex-col gap-8 mt-16">
               {NAV_LINKS.map((link) => (
                 <a
@@ -235,7 +269,6 @@ export default function Hero() {
               ))}
             </div>
 
-            {/* CTA */}
             <div className="mt-auto">
               <a
                 href="#contacto"
